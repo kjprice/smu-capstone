@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Ubuntu+Mono">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css">
+    <title>American Sign Language Recognition</title>
+    <style>
+      body { font-family: 'Ubuntu+Mono', monospace; }
+      main { width: 750px !important; }
+      #video-wrap { position: relative; background: #bbbbbb; }
+      #video-feed { display: block; margin: 0 auto; height: 400px; }
+      #note { position: absolute; top: 4px; left: 8px; font-size: 12px; color: #c70000; }
+      #results { font-size: 30px; }
+      #results .row { border: 1px solid #bbbbbb; border-top: none; }
+      #results .row .columns { padding: 8px 16px; }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <div id="video-wrap">
+        <video id="video-feed"></video>
+        <span id="note"></span>
+      </div>
+      <div id="results"></div>
+    </main>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript">
+      const socket = io();
+      const video = document.getElementById('video-feed');
+      const results = document.getElementById('results');
+      const note = document.getElementById('note');
+
+      function displayResults(data) {
+        results.innerHTML = data.map((item, index) => `
+          <div class="row">
+            <div class="six columns">
+              <span>Guess #${index + 1}:</span>
+              <strong>Letter ${item.value}</strong>
+            </div>
+            <div class="six columns">
+              <span>Probability:</span>
+              <strong>${item.probability}%</strong>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      function displayNote(text) {
+        note.innerHTML = text;
+      }
+
+      function initializeStream(stream) {
+        const { clientWidth: width, clientHeight: height } = video;
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+
+        video.capture = () => {
+          canvas.getContext('2d').drawImage(video, 0, 0, width, height);
+          return canvas.toDataURL();
+        };
+
+        video.srcObject = stream;
+        video.play();
+      }
+
+      function initializeSocket() {
+        socket.getClassification = () => {
+          displayNote('Processing...');
+          socket.emit('get-classification', video.capture());
+        };
+
+        socket.on('classification', (data) => {
+          displayNote('');
+          displayResults(data);
+          setTimeout(socket.getClassification, 1000);
+        });
+
+        socket.getClassification();
+      }
+
+      if (navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ video: true })
+          .then(initializeStream)
+          .then(initializeSocket)
+          .catch(error => displayNote('Video cannot be streamed.'));
+      } else {
+        displayNote('Video cannot be streamed.');
+      }
+    </script>
+  </body>
+</html>
