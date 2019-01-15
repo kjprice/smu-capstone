@@ -1,28 +1,33 @@
 const app = require('express')();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
+const spawn = require('child_process').spawn;
+
+// https://www.sohamkamani.com/blog/2015/08/21/python-nodejs-comm/
+let getClassificationPy = null;
+
+function initPython() {
+  getClassificationPy = spawn('python', ['get_classification.py']);
+  // note that we are reading from stderr because it emits data once,
+  // while stdout emits multiple times
+  getClassificationPy.stderr.on('data', (data) => {
+    sendClassifications(data.toString());
+  });
+}
+
+initPython();
 
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
 
-function sendClassification() {
-  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  const randomLetter = () => letters[Math.floor(Math.random() * 26)];
-  const randomProbability = (max, offset) => (Math.random() * max + offset).toFixed(2);
-
-  const data =  [
-    { value: randomLetter(), probability: randomProbability(33, 66) },
-    { value: randomLetter(), probability: randomProbability(33, 33) },
-    { value: randomLetter(), probability: randomProbability(33,  0) },
-  ];
-
-  io.sockets.emit('classification', data);
+function sendClassifications(data) {
+  io.sockets.emit('classification', JSON.parse(data));
 }
 
 io.on('connection', (socket) => {
   socket.on('get-classification', (image) => {
-    setTimeout(sendClassification, 1000);
+    getClassificationPy.stdin.write(`${image}\n`);
   });
 });
 
