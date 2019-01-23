@@ -12,7 +12,7 @@
       #video-wrap { position: relative; background: #bbbbbb; }
       #video-feed { display: block; margin: 0 auto; height: 400px; }
       #note { position: absolute; top: 4px; left: 8px; font-size: 12px; color: #c70000; }
-      #results { font-size: 30px; }
+      #results { font-size: 22px; }
       #results .row { border: 1px solid #bbbbbb; border-top: none; }
       #results .row .columns { padding: 8px 16px; }
     </style>
@@ -38,11 +38,10 @@
           <div class="row">
             <div class="six columns">
               <span>Guess #${index + 1}:</span>
-              <strong>Letter ${item.value}</strong>
+              <strong>${item.value}</strong>
             </div>
             <div class="six columns">
-              <span>Probability:</span>
-              <strong>${item.probability.toFixed(2)}%</strong>
+              <strong>${item.probability}</strong>
             </div>
           </div>
         `).join('');
@@ -53,23 +52,32 @@
       }
 
       function initializeStream(stream) {
-        const { clientWidth: width, clientHeight: height } = video;
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
+        return new Promise((resolve) => {
+          const canvas = document.createElement('canvas');
 
-        video.capture = () => {
-          canvas.getContext('2d').drawImage(video, 0, 0, width, height);
-          return canvas.toDataURL();
-        };
+          video.capture = () => {
+            const { width, height } = canvas;
+            canvas.getContext('2d').drawImage(video, 0, 0, width, height);
+            return canvas.toDataURL('image/jpeg', 1.0);
+          };
 
-        video.srcObject = stream;
-        video.play();
+          video.srcObject = stream;
+          video.play();
+
+          // wait for video to play the first frame
+          video.onplaying = () => {
+            const { clientWidth: width, clientHeight: height } = video;
+            canvas.width = width;
+            canvas.height = height;
+            resolve();
+          };
+        });
       }
 
       function initializeSocket() {
         socket.getClassification = () => {
           displayNote('Processing...');
+          displayResults([]);
           socket.emit('get-classification', video.capture());
         };
 
@@ -86,7 +94,10 @@
         navigator.mediaDevices.getUserMedia({ video: true })
           .then(initializeStream)
           .then(initializeSocket)
-          .catch(error => displayNote('Video cannot be streamed.'));
+          .catch((error) => {
+            console.log(error);
+            displayNote('Video cannot be streamed.');
+          });
       } else {
         displayNote('Video cannot be streamed.');
       }
