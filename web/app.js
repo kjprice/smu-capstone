@@ -10,8 +10,18 @@ function initPython() {
   getClassificationPy = spawn('python3', ['get_classification.py']);
   // note that we are reading from stderr because it emits data once,
   // while stdout emits multiple times
-  getClassificationPy.stderr.on('data', (data) => {
-    sendClassifications(data.toString());
+  getClassificationPy.stderr.on('data', (buffer) => {
+    const data = buffer.toString();
+    console.log(data);
+
+    // check if the data format is a json array
+    if (/^\[.*\]$/.test(data)) {
+      sendClassifications(data);
+    }
+  });
+  // also read from stdout for logging purposes
+  getClassificationPy.stdout.on('data', (buffer) => {
+    console.log(buffer.toString());
   });
 }
 
