@@ -7,7 +7,7 @@ const spawn = require('child_process').spawn;
 let getClassificationPy = null;
 
 function initPython() {
-  getClassificationPy = spawn('python', ['get_classification.py']);
+  getClassificationPy = spawn('python3', ['get_classification.py']);
   // note that we are reading from stderr because it emits data once,
   // while stdout emits multiple times
   getClassificationPy.stderr.on('data', (data) => {
