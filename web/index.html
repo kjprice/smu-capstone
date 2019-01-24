@@ -41,7 +41,7 @@
               <strong>${item.value}</strong>
             </div>
             <div class="six columns">
-              <strong>${item.probability}</strong>
+              <strong>${(item.probability * 100).toFixed(0)}%</strong>
             </div>
           </div>
         `).join('');
