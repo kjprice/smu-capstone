@@ -13,7 +13,7 @@ ALPHABET = [
   'del','space','nothing',
 ]
 
-model = load_model("weights-improvement-09-0.82.hdf5")
+model = load_model("weights-improvement-10-0.83.hdf5")
 
 def readb64(uri):
   encoded_data = uri.split(',')[1]
