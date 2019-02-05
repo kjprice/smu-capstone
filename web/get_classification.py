@@ -22,7 +22,10 @@ def readb64(uri):
   return img
 
 while True:
-  base64_image = input('Enter base64 image: ')
+  request = input('Enter base64 image: ').split('||')
+  client_id = request[0]
+  base64_image = request[1]
+
   image = readb64(base64_image)
   image = cv2.resize(image, (150, 150))
   cv2.imwrite('screenshot.jpg', image)
@@ -38,4 +41,4 @@ while True:
       'value': ('Letter ' if index < 26 else '') + ALPHABET[index],
       'probability': predictions[index].item(),
     })
-  sys.stderr.write(json.dumps(data))
+  sys.stderr.write(client_id + '||' + json.dumps(data))
