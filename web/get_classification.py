@@ -10,7 +10,7 @@ import numpy as np
 ALPHABET = [
   'A','B','C','D','E','F','G','H','I','J','K','L','M',
   'N','O','P','Q','R','S','T','U','V','W','X','Y','Z',
-  'del','space','nothing',
+  'del','nothing','space',
 ]
 
 model = load_model("weights-improvement-10-0.83.hdf5")
