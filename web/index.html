@@ -108,7 +108,6 @@
       function initializeSocket() {
         socket.getClassification = () => {
           displayNote('Processing...');
-          displayResults([]);
           socket.emit('get-classification', video.capture());
         };
 
