@@ -15,6 +15,7 @@
       #results { font-size: 22px; }
       #results .row { border: 1px solid #bbbbbb; border-top: none; }
       #results .row .columns { padding: 8px 16px; }
+      #guide-box { display: none; position: absolute; border: 3px dotted #1abc9c; }
     </style>
   </head>
   <body>
@@ -22,6 +23,7 @@
       <div id="video-wrap">
         <video id="video-feed"></video>
         <span id="note"></span>
+        <span id="guide-box"></span>
       </div>
       <div id="results"></div>
     </main>
@@ -32,6 +34,7 @@
       const video = document.getElementById('video-feed');
       const results = document.getElementById('results');
       const note = document.getElementById('note');
+      const guideBox = document.getElementById('guide-box');
 
       function displayResults(data) {
         results.innerHTML = data.map((item, index) => `
@@ -51,14 +54,41 @@
         note.innerHTML = text;
       }
 
+      function displayGuideBox(canvas) {
+        const { width: canvasWidth, height: canvasHeight } = canvas;
+        const width = Math.min(canvasWidth, 300);
+        const height = Math.min(canvasHeight, 300);
+        const side = Math.min(width, height);
+        const top = (canvasHeight - side) / 2;
+        const left = (canvasWidth - side) / 2;
+        // offset when video is more narrow than parent
+        const offset = (guideBox.parentNode.clientWidth - canvasWidth) / 2;
+
+        guideBox.style.display = 'block';
+        guideBox.style.top = `${top}px`;
+        guideBox.style.left = `${offset + left}px`;
+        guideBox.style.width = `${side}px`;
+        guideBox.style.height = `${side}px`;
+        guideBox.dimension = { x: left, y: top, w: side, h: side };
+      }
+
       function initializeStream(stream) {
+        function crop(canvas, { x, y, w, h }) {
+          const croppedData = canvas.getContext('2d').getImageData(x, y, w, h);
+          const tmp = document.createElement('canvas');
+          tmp.width = w;
+          tmp.height = h;
+          tmp.getContext('2d').putImageData(croppedData, 0, 0);
+          return tmp.toDataURL('image/jpeg', 1.0);
+        }
+
         return new Promise((resolve) => {
           const canvas = document.createElement('canvas');
 
           video.capture = () => {
             const { width, height } = canvas;
             canvas.getContext('2d').drawImage(video, 0, 0, width, height);
-            return canvas.toDataURL('image/jpeg', 1.0);
+            return crop(canvas, guideBox.dimension);
           };
 
           video.srcObject = stream;
@@ -69,6 +99,7 @@
             const { clientWidth: width, clientHeight: height } = video;
             canvas.width = width;
             canvas.height = height;
+            displayGuideBox(canvas);
             resolve();
           };
         });
