@@ -6,14 +6,17 @@ import base64
 import cv2
 from keras.models import load_model
 import numpy as np
+import json
 
-ALPHABET = [
-  'A','B','C','D','E','F','G','H','I','J','K','L','M',
-  'N','O','P','Q','R','S','T','U','V','W','X','Y','Z',
-  'del','nothing','space',
-]
+def read_json_class_names():
+  with open('class_labels/2019-02-07 02_41_41.563288-data.json') as f:
+    data = json.load(f)
+    return list(data.keys())
 
-model = load_model("weights-improvement-10-0.83.hdf5")
+CLASS_NAMES = read_json_class_names()
+print('class names: {}'.format(CLASS_NAMES))
+
+model = load_model('models/weights-improvement-2019-02-06 22_42_19.054805-10-0.88.hdf5')
 
 def readb64(uri):
   encoded_data = uri.split(',')[1]
@@ -38,7 +41,7 @@ while True:
   data = []
   for index in top_predictions:
     data.append({
-      'value': ('Letter ' if index < 26 else '') + ALPHABET[index],
+      'value': ('Letter ' if index < 26 else '') + CLASS_NAMES[index],
       'probability': predictions[index].item(),
     })
   sys.stderr.write(client_id + '||' + json.dumps(data))
