@@ -15,7 +15,7 @@ function initPython() {
     console.log(data);
 
     // check if the data format is a json array
-    if (/^\[.*\]$/.test(data)) {
+    if (/^.+\|\|\[.*\]$/.test(data)) {
       sendClassifications(data);
     }
   });
@@ -32,12 +32,15 @@ app.get('/', (req, res) => {
 });
 
 function sendClassifications(data) {
-  io.sockets.emit('classification', JSON.parse(data));
+  const response = data.split('||');
+  const socketId = response[0];
+  const classifications = JSON.parse(response[1]);
+  io.to(socketId).emit('classification', classifications);
 }
 
 io.on('connection', (socket) => {
   socket.on('get-classification', (image) => {
-    getClassificationPy.stdin.write(`${image}\n`);
+    getClassificationPy.stdin.write(`${socket.id}||${image}\n`);
   });
 });
 
