@@ -1,6 +1,20 @@
 const app = require('express')();
-const http = require('http').Server(app);
-const io = require('socket.io')(http);
+const fs = require('fs');
+
+let server = null;
+let port = null;
+if (process.env.NODE_ENV === 'production') {
+  server = require('https').createServer({
+    key: fs.readFileSync('/etc/letsencrypt/live/asl-dictionary.net/privkey.pem', 'utf8'),
+    cert: fs.readFileSync('/etc/letsencrypt/live/asl-dictionary.net/cert.pem', 'utf8'),
+  }, app);
+  port = 443;
+} else {
+  server = require('http').Server(app);
+  port = 3000;
+}
+
+const io = require('socket.io')(server);
 const spawn = require('child_process').spawn;
 
 // https://www.sohamkamani.com/blog/2015/08/21/python-nodejs-comm/
@@ -44,6 +58,6 @@ io.on('connection', (socket) => {
   });
 });
 
-http.listen(3000, () => {
-  console.log('Server listening on *:3000');
+server.listen(port, () => {
+  console.log(`Server listening on *:${port}`);
 });
