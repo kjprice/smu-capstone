@@ -39,3 +39,7 @@ Run the app via pm2
 ```
 sudo pm2 start app.js
 ```
+Stop the app on pm2
+```
+sudo pm2 stop app
+```
