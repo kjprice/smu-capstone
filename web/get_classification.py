@@ -9,14 +9,14 @@ import numpy as np
 import json
 
 def read_json_class_names():
-  with open('class_labels/2019-02-07 02_41_41.563288-data.json') as f:
+  with open('class_labels/2020-05-25__21:33:02.665517-data.json') as f:
     data = json.load(f)
     return list(data.keys())
 
 CLASS_NAMES = read_json_class_names()
 print('class names: {}'.format(CLASS_NAMES))
 
-model = load_model('models/weights-improvement-2019-02-06 22_42_19.054805-10-0.88.hdf5')
+model = load_model('models/weights-improvement-2019-05-25__21:33:02.665517-10-0.97.hdf5')
 
 def readb64(uri):
   encoded_data = uri.split(',')[1]
